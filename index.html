@@ -173,6 +173,7 @@
 <button id="shopBtn">🛍 Shop</button>
 <button id="muteBtn">🔊</button>
 <button id="skipTut">Skip Tutorial</button>
+<div id="raceLabel" style="display:none;position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:6;background:rgba(255,255,255,.72);border-radius:12px;padding:4px 12px;font-size:12px;font-weight:800;color:#12405f;backdrop-filter:blur(5px);white-space:nowrap"></div>
 <div id="touchUI">
   <div class="tbtn" id="tL">◀</div>
   <div class="tbtn" id="tR">▶</div>
@@ -245,7 +246,7 @@
     <div id="customGrid" class="shopGrid" style="grid-template-columns:repeat(3,1fr)"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><h2 style="font-size:18px">Courses</h2><button class="btn small" id="courseCreate" style="margin-top:0">＋ Create Course</button></div>
     <div id="courseGrid" class="shopGrid" style="grid-template-columns:repeat(3,1fr)"></div>
-    <div class="btnrow" style="margin-top:16px"><button class="btn small" id="openCommunity" style="margin-top:0">🌐 Community</button><button class="btn sec small" id="pasteCode">Paste a Code</button><button class="btn sec small" id="customBack">Back</button></div>
+    <div class="btnrow" style="margin-top:16px"><button class="btn sec small" id="pasteCode">Paste a Code</button><button class="btn small" id="openCommunity" style="margin-top:0">Community</button><button class="btn sec small" id="customBack">Back</button></div>
   </div>
 </div>
 
@@ -347,6 +348,15 @@
   <textarea id="creModalArea" class="hidden" rows="4"></textarea>
   <div class="creModalBtns" id="creModalBtns"></div>
 </div></div>
+
+<div id="lbModal" style="display:none;position:fixed;inset:0;z-index:30;background:rgba(13,43,69,.5);align-items:center;justify-content:center;padding:16px">
+  <div style="background:#fff;border-radius:20px;padding:22px 24px;max-width:460px;width:100%;max-height:86vh;overflow:auto;box-shadow:0 24px 60px rgba(13,43,69,.4)">
+    <h2 id="lbTitle" style="font-size:20px;font-weight:900;color:#12405f;text-align:center;margin:0">Leaderboard</h2>
+    <div id="lbWho" style="text-align:center;font-size:12px;color:#5b7a90;margin:8px 0 4px"></div>
+    <div id="lbList" style="margin:10px 0 6px"></div>
+    <div class="btnrow"><button class="btn sec small" id="lbClose">Close</button></div>
+  </div>
+</div>
 
 <div id="err"></div>
 
@@ -519,7 +529,7 @@ const THEME_PAL={ green:{track:0x6ec06e,ramp:0x58a85a}, desert:{track:0xe0c48a,r
 
 // ---------- progress ----------
 let progress={stars:{},best:{},coins:0,ghosts:{}};
-function ensureDefaults(){ if(!progress.stars)progress.stars={}; if(!progress.best)progress.best={}; if(progress.coins==null)progress.coins=0; if(!progress.ghosts)progress.ghosts={}; if(!progress.ownedSkins)progress.ownedSkins=['classic']; if(!progress.ownedTrails)progress.ownedTrails=['none']; if(!progress.skin)progress.skin='classic'; if(!progress.trail)progress.trail='none'; if(!progress.customHoles)progress.customHoles=[]; if(!progress.customCourses)progress.customCourses=[]; if(progress.muted==null)progress.muted=false; if(progress.seenTutorial==null)progress.seenTutorial=false; if(!progress.touchScheme)progress.touchScheme='buttons'; if(progress.author==null)progress.author=''; if(!progress.pubToken)progress.pubToken=rndId(); if(!progress.liked)progress.liked=[]; if(progress.adminSecret==null)progress.adminSecret=''; if(progress.lastPublish==null)progress.lastPublish=0; if(!progress.countedPlays)progress.countedPlays=[]; }
+function ensureDefaults(){ if(!progress.stars)progress.stars={}; if(!progress.best)progress.best={}; if(progress.coins==null)progress.coins=0; if(!progress.ghosts)progress.ghosts={}; if(!progress.ownedSkins)progress.ownedSkins=['classic']; if(!progress.ownedTrails)progress.ownedTrails=['none']; if(!progress.skin)progress.skin='classic'; if(!progress.trail)progress.trail='none'; if(!progress.customHoles)progress.customHoles=[]; if(!progress.customCourses)progress.customCourses=[]; if(progress.muted==null)progress.muted=false; if(progress.seenTutorial==null)progress.seenTutorial=false; if(!progress.touchScheme)progress.touchScheme='buttons'; if(progress.author==null)progress.author=''; if(!progress.pubToken)progress.pubToken=rndId(); if(!progress.liked)progress.liked=[]; if(progress.adminSecret==null)progress.adminSecret=''; if(progress.lastPublish==null)progress.lastPublish=0; if(!progress.countedPlays)progress.countedPlays=[]; if(!progress.lbBest)progress.lbBest={}; }
 
 /* ===== COMMUNITY / SUPABASE CONFIG =====================================
    Paste your Supabase Project URL and anon public key between the quotes.
@@ -976,7 +986,7 @@ function showBanner(a,b){ bH.textContent=a; bP.textContent=b; banner.classList.a
 function hideBanner(){ banner.classList.remove('show'); }
 
 // ---------- screens ----------
-function showScreen(id){ ['titleScreen','courseScreen','levelScreen','resultScreen','shopScreen','customScreen','creatorScreen','courseBuilderScreen','communityScreen'].forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==id)); document.body.classList.toggle('playing',id===null); document.body.classList.toggle('titlescreen', id==='titleScreen'); document.body.classList.toggle('builder', id==='creatorScreen'||id==='customScreen'||id==='courseBuilderScreen'); if(id){ updateMenuStats(); ghostMesh.visible=false; applyTheme('day'); scene.background=SKY_DAY; } }
+function showScreen(id){ ['titleScreen','courseScreen','levelScreen','resultScreen','shopScreen','customScreen','creatorScreen','courseBuilderScreen','communityScreen'].forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==id)); document.body.classList.toggle('playing',id===null); document.body.classList.toggle('titlescreen', id==='titleScreen'); document.body.classList.toggle('builder', id==='creatorScreen'||id==='customScreen'||id==='courseBuilderScreen'); if(id){ updateMenuStats(); ghostMesh.visible=false; applyTheme('day'); scene.background=SKY_DAY; const rl=document.getElementById('raceLabel'); if(rl)rl.style.display='none'; } }
 function starStr(n){ let s=''; for(let i=0;i<3;i++)s+=i<n?'★':'☆'; return s; }
 function starHtml(n){ let s=''; for(let i=0;i<3;i++)s+= i<n?'★':'<span class="off">☆</span>'; return s; }
 
@@ -1004,19 +1014,21 @@ function starsForTime(def,t){ if(t<=def.gold)return 3; if(t<=def.silver)return 2
 
 function startHole(ci,hi){ curCourse=ci; curHole=hi; const c=COURSES[ci]; curDef=c.holes[hi]; isTutorial=(c.kind==='tutorial'); falls=0; holeTime=0; running=true; holeStarted=false;
   recording=[]; recAcc=0; ghostIdx=0; ghostRec=(progress.ghosts&&progress.ghosts[ci+'-'+hi])||null; ghostMesh.visible=false;
+  lbKey=(ci>0?'b:'+ci+':'+hi:null); lbTitle=''; if(lbKey)loadRaceGhost(lbKey); else { lbRacing=null; setRaceLabel(); }
   curTheme=c.theme||'green'; applyTheme(curTheme);
   const pal=THEME_PAL[curTheme]||THEME_PAL.green;
   buildLevel(curDef,pal); showScreen(null); state='intro'; introT=0; showBanner(isTutorial?('Lesson '+(hi+1)):('Hole '+(hi+1)),'Go!'); updateHUD(); }
 function finishHole(){
   if(playingCourse){ const t=holeTime, s=starsForTime(curDef,t); playingCourse.results.push({name:(playingCourse.holes[playingCourse.idx].name||('Hole '+(playingCourse.idx+1))),t,s}); progress.coins+=coinsThisRun; saveProgress(); playingCourse.idx++; if(playingCourse.idx<playingCourse.holes.length){ playCourseHole(); return; } showCourseSummary(); return; }
-  if(testing){ testing=false; document.getElementById('resHole').textContent=(testReturn==='custom'?'Cleared':'Test Run'); document.getElementById('resStars').innerHTML='⛳'; document.getElementById('resTime').innerHTML=fmt1(holeTime)+'<small>YOUR TIME</small>'; document.getElementById('resRows').innerHTML='<div class="sc-row"><span>Result</span><b>The hole works!</b></div><div class="sc-row"><span>★★★ under</span><b>'+curDef.gold+'s</b></div>'; document.getElementById('resPB').textContent=''; document.getElementById('resUnlock').textContent='';
+  if(testing){ if(lbKey)submitScore(lbKey,holeTime,recording); testing=false; document.getElementById('resHole').textContent=(testReturn==='custom'?'Cleared':'Test Run'); document.getElementById('resStars').innerHTML='⛳'; document.getElementById('resTime').innerHTML=fmt1(holeTime)+'<small>YOUR TIME</small>'; document.getElementById('resRows').innerHTML='<div class="sc-row"><span>Result</span><b>The hole works!</b></div><div class="sc-row"><span>★★★ under</span><b>'+curDef.gold+'s</b></div>'; document.getElementById('resPB').textContent=''; document.getElementById('resUnlock').textContent='';
     const bt=document.getElementById('resBtns'); bt.innerHTML=''; const mk=(l,c,fn)=>{const b=document.createElement('button');b.className='btn '+c+' small';b.textContent=l;b.addEventListener('click',fn);bt.appendChild(b);};
-    if(testReturn==='community'){ mk('Back to Community','',openCommunity); } else if(testReturn==='custom'){ mk('Play Again','sec',()=>playCustom(testIdx)); mk('My Levels','',openCustom); } else { mk('Test Again','sec',creTest); mk('Back to Editor','',openCreator); }
+    if(testReturn==='community'){ if(lbKey)mk('Leaderboard','sec',()=>openLeaderboard(lbKey)); mk('Back to Community','',openCommunity); } else if(testReturn==='custom'){ mk('Play Again','sec',()=>playCustom(testIdx)); mk('My Levels','',openCustom); } else { mk('Test Again','sec',creTest); mk('Back to Editor','',openCreator); }
     state='result'; showScreen('resultScreen'); return; }
   const wasUn=COURSES.map((_,i)=>courseUnlocked(i));
   const t=holeTime, s=starsForTime(curDef,t); const prevTotal=totalStars(); setStars(curCourse,curHole,s); const isBest=setBest(curCourse,curHole,t); const pb=bestOf(curCourse,curHole);
   progress.coins+=coinsThisRun;
   if(isBest && recording.length>1 && recording.length<2400){ if(!progress.ghosts)progress.ghosts={}; progress.ghosts[curCourse+'-'+curHole]=recording; }
+  if(lbKey)submitScore(lbKey,t,recording);
   saveProgress();
   document.getElementById('resHole').textContent=isTutorial?('Lesson '+(curHole+1)+' / 4'):('Hole '+(curHole+1));
   document.getElementById('resStars').innerHTML=starHtml(s);
@@ -1039,6 +1051,7 @@ function finishHole(){
   mk('Retry','sec',()=>startHole(curCourse,curHole));
   if(curHole+1<COURSES[curCourse].holes.length && holeUnlocked(curCourse,curHole+1)) mk('Next','',()=>startHole(curCourse,curHole+1));
   else if(isTutorial && curHole===COURSES[0].holes.length-1) mk('Courses','',()=>openCourses());
+  if(lbKey)mk('Leaderboard','sec',()=>openLeaderboard(lbKey));
   mk('Levels','sec',()=>openLevels(curCourse));
   }
   state='result'; showScreen('resultScreen');
@@ -1056,6 +1069,12 @@ function texOrange(){ return skinTex(ctx=>{ ctx.fillStyle='#f59120'; ctx.fillRec
 function texDonut(){ return skinTex(ctx=>{ ctx.fillStyle='#c79f68'; ctx.fillRect(0,0,128,128); ctx.fillStyle='#ff9ecb'; ctx.fillRect(0,0,128,46); ctx.beginPath(); ctx.moveTo(0,46); ctx.bezierCurveTo(30,64,98,64,128,46); ctx.lineTo(128,46); ctx.lineTo(0,46); ctx.fill(); const sp=['#fff','#ff5a5a','#4dd0ff','#ffe14d','#7ed957']; for(let i=0;i<44;i++){ ctx.strokeStyle=sp[i%5]; ctx.lineWidth=3; const x=Math.random()*128,y=Math.random()*44,a=Math.random()*6.28; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+Math.cos(a)*7,y+Math.sin(a)*7); ctx.stroke(); } }); }
 function texMelon(){ return skinTex(ctx=>{ ctx.fillStyle='#4a9e3f'; ctx.fillRect(0,0,128,128); ctx.strokeStyle='#2f6b28'; ctx.lineWidth=7; for(let x=-16;x<160;x+=26){ ctx.beginPath(); ctx.moveTo(x,0); ctx.quadraticCurveTo(x+9,64,x,128); ctx.stroke(); } }); }
 function texEye(){ return skinTex(ctx=>{ ctx.fillStyle='#fbfbfb'; ctx.fillRect(0,0,128,128); ctx.strokeStyle='rgba(200,70,70,0.35)'; ctx.lineWidth=2; for(let i=0;i<14;i++){ctx.beginPath();ctx.moveTo(64,64);const a=Math.random()*6.28;ctx.lineTo(64+Math.cos(a)*62,64+Math.sin(a)*62);ctx.stroke();} ctx.fillStyle='#3aa0d0'; ctx.beginPath(); ctx.arc(64,64,27,0,7); ctx.fill(); ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(64,64,13,0,7); ctx.fill(); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(58,58,5,0,7); ctx.fill(); }); }
+function texBaseball(){ return skinTex(ctx=>{ ctx.fillStyle='#fbfbfb'; ctx.fillRect(0,0,128,128); ctx.strokeStyle='#d33'; ctx.lineWidth=3; for(const s of [16,112]){ ctx.beginPath(); ctx.arc(s,64,56,-1.0,1.0); ctx.stroke(); for(let y=26;y<104;y+=12){ const dx=s<64?1:-1; ctx.beginPath(); ctx.moveTo(s+dx*10,y); ctx.lineTo(s+dx*18,y-5); ctx.stroke(); ctx.beginPath(); ctx.moveTo(s+dx*10,y); ctx.lineTo(s+dx*18,y+5); ctx.stroke(); } } }); }
+function texTennis(){ return skinTex(ctx=>{ ctx.fillStyle='#c8e64f'; ctx.fillRect(0,0,128,128); ctx.strokeStyle='#fff'; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(18,64,60,-0.85,0.85); ctx.stroke(); ctx.beginPath(); ctx.arc(110,64,60,Math.PI-0.85,Math.PI+0.85); ctx.stroke(); }); }
+function texEight(){ return skinTex(ctx=>{ ctx.fillStyle='#161616'; ctx.fillRect(0,0,128,128); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(64,54,22,0,7); ctx.fill(); ctx.fillStyle='#161616'; ctx.font='bold 26px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('8',64,56); }); }
+function texGalaxy(){ return skinTex(ctx=>{ const g=ctx.createLinearGradient(0,0,128,128); g.addColorStop(0,'#2a1a5e'); g.addColorStop(0.5,'#6a2f9c'); g.addColorStop(1,'#160e38'); ctx.fillStyle=g; ctx.fillRect(0,0,128,128); for(let i=0;i<80;i++){ ctx.fillStyle='rgba(255,255,255,'+(0.3+Math.random()*0.7)+')'; ctx.beginPath(); ctx.arc(Math.random()*128,Math.random()*128,Math.random()*1.7,0,7); ctx.fill(); } }); }
+function texLava(){ return skinTex(ctx=>{ ctx.fillStyle='#1a1210'; ctx.fillRect(0,0,128,128); for(let i=0;i<16;i++){ ctx.strokeStyle=['#ff5a1e','#ff9d2e','#ffd23f'][i%3]; ctx.lineWidth=2+Math.random()*3; let x=Math.random()*128,y=Math.random()*128; ctx.beginPath(); ctx.moveTo(x,y); for(let j=0;j<4;j++){ x+=(Math.random()-0.5)*44; y+=(Math.random()-0.5)*44; ctx.lineTo(x,y); } ctx.stroke(); } }); }
+function texEarth(){ return skinTex(ctx=>{ ctx.fillStyle='#2a6fd6'; ctx.fillRect(0,0,128,128); ctx.fillStyle='#3fa64a'; for(let i=0;i<12;i++){ const x=Math.random()*128,y=Math.random()*128,r=8+Math.random()*18; ctx.beginPath(); for(let a=0;a<7;a+=0.5){ const rr=r*(0.6+Math.random()*0.5); const px=x+Math.cos(a)*rr, py=y+Math.sin(a)*rr; a?ctx.lineTo(px,py):ctx.moveTo(px,py); } ctx.closePath(); ctx.fill(); } }); }
 const SKINS=[
  {id:'classic',name:'Classic',price:0,color:0xffffff},
  {id:'golf',name:'Golf Ball',price:40,tex:texGolf},
@@ -1068,6 +1087,12 @@ const SKINS=[
  {id:'donut',name:'Donut',price:110,tex:texDonut},
  {id:'melon',name:'Watermelon',price:110,tex:texMelon},
  {id:'eye',name:'Eyeball',price:130,tex:texEye},
+ {id:'baseball',name:'Baseball',price:80,tex:texBaseball},
+ {id:'tennis',name:'Tennis Ball',price:70,tex:texTennis},
+ {id:'eight',name:'8-Ball',price:90,tex:texEight},
+ {id:'earth',name:'Earth',price:120,tex:texEarth},
+ {id:'galaxy',name:'Galaxy',price:150,tex:texGalaxy},
+ {id:'lava',name:'Lava',price:150,tex:texLava},
 ];
 const TRAILS=[
  {id:'none',name:'None',price:0,color:null},
@@ -1079,14 +1104,18 @@ const TRAILS=[
  {id:'cyan',name:'Cyan',price:20,color:0x4de1ff},
  {id:'pink',name:'Pink',price:20,color:0xff6ec7},
  {id:'purple',name:'Purple',price:20,color:0xb44dff},
+ {id:'orange',name:'Orange',price:20,color:0xff9f40},
+ {id:'lime',name:'Lime',price:20,color:0xa6ff4d},
+ {id:'magenta',name:'Magenta',price:20,color:0xff4dd8},
+ {id:'rainbow',name:'Rainbow',price:60,color:'rainbow'},
 ];
 const TRAIL_COLORS={}; for(const t of TRAILS) TRAIL_COLORS[t.id]=t.color;
 function applySkin(id){ const s=SKINS.find(x=>x.id===id)||SKINS[0]; if(s.tex){ if(!s._t)s._t=s.tex(); ball.material.map=s._t; ball.material.color.setHex(0xffffff); } else { ball.material.map=null; ball.material.color.setHex(s.color||0xffffff); } ball.material.needsUpdate=true; }
 const TRAIL_N=14, trailMeshes=[]; let trailHist=[];
 for(let i=0;i<TRAIL_N;i++){ const m=new THREE.Mesh(new THREE.SphereGeometry(R*0.62,8,6), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.5,depthWrite:false})); m.visible=false; scene.add(m); trailMeshes.push(m); }
 function hideTrail(){ for(const m of trailMeshes) m.visible=false; trailHist=[]; }
-function updateTrail(){ const col=TRAIL_COLORS[progress.trail]; if(col==null){ hideTrail(); return; } trailHist.unshift([ball.position.x,ball.position.y,ball.position.z]); if(trailHist.length>TRAIL_N*2+2)trailHist.length=TRAIL_N*2+2;
-  for(let i=0;i<TRAIL_N;i++){ const p=trailHist[i*2+2]; const m=trailMeshes[i]; if(!p){m.visible=false;continue;} m.visible=true; m.position.set(p[0],p[1],p[2]); const f=1-i/TRAIL_N; m.scale.setScalar(0.35+f*0.65); m.material.color.setHex(col); m.material.opacity=0.55*f; } }
+function updateTrail(){ const tr=progress.trail; const col=TRAIL_COLORS[tr]; const rainbow=(tr==='rainbow'); if(col==null && !rainbow){ hideTrail(); return; } trailHist.unshift([ball.position.x,ball.position.y,ball.position.z]); if(trailHist.length>TRAIL_N*2+2)trailHist.length=TRAIL_N*2+2; const now=performance.now()/1000;
+  for(let i=0;i<TRAIL_N;i++){ const p=trailHist[i*2+2]; const m=trailMeshes[i]; if(!p){m.visible=false;continue;} m.visible=true; m.position.set(p[0],p[1],p[2]); const f=1-i/TRAIL_N; m.scale.setScalar(0.35+f*0.65); if(rainbow){ m.material.color.setHSL(((i/TRAIL_N)*0.7+now*0.25)%1,0.9,0.6); } else { m.material.color.setHex(col); } m.material.opacity=0.55*f; } }
 function skinSwatch(it){ if(!it.tex) return '#'+(it.color||0xffffff).toString(16).padStart(6,'0'); if(!it._t)it._t=it.tex(); if(!it._url)it._url='url('+it._t.image.toDataURL()+')'; return it._url; }
 let preShop='titleScreen';
 function ownsItem(type,id){ return (type==='skin'?progress.ownedSkins:progress.ownedTrails).indexOf(id)>=0; }
@@ -1094,7 +1123,7 @@ function renderShop(){ document.getElementById('shopCoins').textContent=progress
   const build=(grid,list,type,equipped)=>{ grid.innerHTML='';
     for(const it of list){ const own=ownsItem(type,it.id), eq=equipped===it.id;
       const div=document.createElement('div'); div.className='shopItem'+(eq?' eq':'');
-      const bg = type==='skin' ? skinSwatch(it) : (it.color!=null?'#'+it.color.toString(16).padStart(6,'0'):'repeating-linear-gradient(45deg,#d4d4d4,#d4d4d4 5px,#efefef 5px,#efefef 10px)');
+      const bg = type==='skin' ? skinSwatch(it) : (it.color==='rainbow'?'linear-gradient(90deg,#ff5a5a,#ffd23f,#7ed957,#4de1ff,#b44dff)':(it.color!=null?'#'+it.color.toString(16).padStart(6,'0'):'repeating-linear-gradient(45deg,#d4d4d4,#d4d4d4 5px,#efefef 5px,#efefef 10px)'));
       let act; if(eq)act='<div class="tag eq">Equipped</div>'; else if(own)act='<button class="sbtn">Equip</button>'; else act='<button class="sbtn buy'+(progress.coins<it.price?' dis':'')+'">🪙 '+it.price+'</button>';
       div.innerHTML='<div class="sw" style="background:'+bg+'"></div><div class="nm">'+it.name+'</div>'+act;
       const btn=div.querySelector('button'); if(btn) btn.addEventListener('click',()=>{ if(own)equipItem(type,it.id); else buyItem(type,it.id); });
@@ -1204,7 +1233,7 @@ function creToDef(){ creCommit(); const def={start:CRE.start||[0,0],hole:CRE.hol
   if(CRE.extra.length)def.extra=CRE.extra.map(e=>e.slice()); if(CRE.walls.length)def.walls=CRE.walls.map(e=>e.slice()); if(CRE.mills.length)def.mills=CRE.mills.map(e=>e.slice()); if(CRE.sand.length)def.sand=CRE.sand.map(e=>e.slice()); if(CRE.boost.length)def.boost=CRE.boost.map(e=>e.slice()); if(CRE.water.length)def.water=CRE.water.map(e=>e.slice()); if(CRE.movers.length)def.movers=CRE.movers.map(e=>e.slice()); if(CRE.gates.length)def.gates=CRE.gates.map(e=>e.slice()); if(CRE.currents.length)def.current=CRE.currents.map(e=>e.slice()); return def; }
 function creValid(){ const d=creToDef(); return d.paths.length>=1 && CRE.start && CRE.hole; }
 function computeStars(def){ const e=estimateHole(def); def.gold=Math.round((e.L/12 + e.turns*0.6 + e.jumps*1.6 + e.movers*2.6 + e.mills*1.8 + e.gates*1.7 + e.currents*1.3 + e.narrow*0.05 + 1.5)*10)/10; def.silver=Math.round((e.L/7 + e.turns*1.0 + e.jumps*2.7 + e.movers*4.0 + e.mills*3.2 + e.gates*3.0 + e.currents*2.4 + e.narrow*0.08 + 4.0)*10)/10; }
-function playDef(def,ret,name){ computeStars(def); testing=true; testReturn=ret; curCourse=-1; curHole=0; curDef=def; isTutorial=false; falls=0; holeTime=0; running=true; holeStarted=false; recording=[]; recAcc=0; ghostIdx=0; ghostRec=null; curTheme='mix'; applyTheme('mix'); buildLevel(def,THEME_PAL.mix); showScreen(null); state='intro'; introT=0; showBanner(name||'Test','Go!'); updateHUD(); }
+function playDef(def,ret,name){ computeStars(def); testing=true; testReturn=ret; curCourse=-1; curHole=0; curDef=def; isTutorial=false; falls=0; holeTime=0; running=true; holeStarted=false; recording=[]; recAcc=0; ghostIdx=0; ghostRec=null; lbKey=null; lbRacing=null; setRaceLabel(); curTheme='mix'; applyTheme('mix'); buildLevel(def,THEME_PAL.mix); showScreen(null); state='intro'; introT=0; showBanner(name||'Test','Go!'); updateHUD(); }
 function showModal(msg, buttons, opts){ opts=opts||{}; document.getElementById('creModalMsg').textContent=msg; const t=document.getElementById('creModalText'), a=document.getElementById('creModalArea'); t.classList.toggle('hidden',!opts.text); a.classList.toggle('hidden',!opts.area); if(opts.text)t.value=opts.textVal||''; if(opts.area)a.value=opts.areaVal||''; const bd=document.getElementById('creModalBtns'); bd.innerHTML=''; for(const b of buttons){ const btn=document.createElement('button'); btn.className='btn small '+(b.cls||''); btn.textContent=b.label; btn.addEventListener('click',b.fn); bd.appendChild(btn); } document.getElementById('creModal').classList.remove('hidden'); }
 function hideModal(){ document.getElementById('creModal').classList.add('hidden'); }
 function creTest(){ if(!creValid()){ showModal('You need a Start, a Cup, and at least one Path (2+ points) before testing.',[{label:'OK',cls:'sec',fn:hideModal}]); return; } playDef(creToDef(),'creator'); }
@@ -1242,6 +1271,22 @@ function openCustom(){ const grid=document.getElementById('customGrid'); grid.in
 }
 function playCustom(i){ const h=progress.customHoles[i]; if(!h)return; testIdx=i; playDef(h.def,'custom',h.name); }
 function esc(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+let lbKey=null, lbTitle='', lbRacing=null;
+function titleForKey(key){ if(!key)return''; if(key[0]==='b'){ const p=key.split(':'); const c=COURSES[+p[1]]; return (c?c.name:'Course')+' \u00b7 Hole '+((+p[2])+1); } return lbTitle||'Community hole'; }
+function submitScore(key,t,ghost){ if(!sbReady()||!key)return; const lb=progress.lbBest||(progress.lbBest={}); if(lb[key]!=null && t>=lb[key])return; lb[key]=t; saveProgress(); const g=(ghost&&ghost.length>1&&ghost.length<2400)?ghost:null; sbRpc('submit_score',{p_level:key,p_player:progress.pubToken,p_name:(progress.author||'anon'),p_time:Math.round(t*100)/100,p_ghost:g}); }
+function setRaceLabel(){ const el=document.getElementById('raceLabel'); if(!el)return; if(lbRacing){ el.textContent='\uD83C\uDFC1 Racing '+lbRacing.name+' \u00b7 '+fmt1(lbRacing.time); el.style.display='block'; } else el.style.display='none'; }
+function loadRaceGhost(key){ lbRacing=null; setRaceLabel(); if(!sbReady()||!key)return; const want=key; sbGet('scores?level_key=eq.'+encodeURIComponent(key)+'&order=time.asc&limit=1&select=name,time,ghost').then(r=>{ if(lbKey!==want)return; if(r&&r[0]&&r[0].ghost&&r[0].ghost.length>1){ ghostRec=r[0].ghost; lbRacing={name:r[0].name||'anon',time:r[0].time}; setRaceLabel(); } }).catch(()=>{}); }
+function lbWhoLine(){ const w=document.getElementById('lbWho'); w.innerHTML='Playing as <b>'+esc(progress.author||'anon')+'</b> <button id="lbName" class="sbtn" style="width:auto;padding:3px 9px;background:#5b86a6">change</button>'; document.getElementById('lbName').addEventListener('click',lbChangeName); }
+function lbChangeName(){ showModal('Your leaderboard name:',[{label:'Save',fn:()=>{ const a=cleanName(document.getElementById('creModalText').value); if(a===null){ document.getElementById('creModalMsg').textContent='That name isn\'t allowed.'; return; } progress.author=a||'anon'; saveProgress(); hideModal(); lbWhoLine(); }},{label:'Cancel',cls:'sec',fn:hideModal}],{text:true,textVal:progress.author||''}); }
+function openLeaderboard(key,title){ if(!key)return; if(title)lbTitle=title; document.getElementById('lbTitle').textContent=titleForKey(key); lbWhoLine(); const box=document.getElementById('lbList'); box.innerHTML='<p style="color:#5b7a90;font-size:13px">Loading\u2026</p>'; document.getElementById('lbModal').style.display='flex';
+  if(!sbReady()){ box.innerHTML='<p style="color:#5b7a90;font-size:13px">Leaderboards aren\'t set up yet.</p>'; return; }
+  sbGet('scores?level_key=eq.'+encodeURIComponent(key)+'&order=time.asc&limit=50&select=id,name,time,player').then(rows=>{
+    if(!rows.length){ box.innerHTML='<p style="color:#5b7a90;font-size:13px">No times yet \u2014 set the first one!</p>'; return; }
+    box.innerHTML=''; rows.forEach((r,i)=>{ const mine=r.player===progress.pubToken; const row=document.createElement('div'); row.className='sc-row'; row.style.cssText='padding:7px 10px;border-radius:8px;'+(mine?'background:rgba(56,178,74,.14)':''); let right='<b>'+fmt1(r.time)+'</b>'; if(progress.adminSecret){ right+=' <button class="sbtn lbdel" data-id="'+r.id+'" style="width:auto;padding:2px 8px;background:#e7513a">\u00d7</button>'; } row.innerHTML='<span>'+(i+1)+'. '+esc(r.name||'anon')+(mine?' (you)':'')+'</span><span>'+right+'</span>'; box.appendChild(row); });
+    if(progress.adminSecret){ box.querySelectorAll('.lbdel').forEach(b=>b.addEventListener('click',()=>{ sbRpcCall('admin_delete_score',{row_id:b.dataset.id,secret:progress.adminSecret}).then(ok=>{ if(ok)openLeaderboard(key,title); }); })); }
+  }).catch(()=>{ box.innerHTML='<p style="color:#e7513a;font-size:13px">Couldn\'t load the leaderboard.</p>'; });
+}
+function closeLeaderboard(){ document.getElementById('lbModal').style.display='none'; }
 function publishItem(kind,name,theme,data){
   if(!sbReady()){ showModal('Community is not set up yet.',[{label:'OK',cls:'sec',fn:hideModal}]); return; }
   const nm=cleanName(name); if(!nm){ showModal('That name can\'t be published \u2014 try renaming it first.',[{label:'OK',cls:'sec',fn:hideModal}]); return; }
@@ -1275,6 +1320,7 @@ function renderCommunity(){ const box=document.getElementById('comList'); const 
       const R=document.createElement('div'); R.style.cssText='display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end';
       const pl=document.createElement('button'); pl.className='sbtn'; pl.style.cssText='width:auto;padding:6px 12px'; pl.textContent='Play'; pl.addEventListener('click',()=>comPlay(it)); R.appendChild(pl);
       const im=document.createElement('button'); im.className='sbtn'; im.style.cssText='width:auto;padding:6px 12px;background:#5b86a6'; im.textContent='Import'; im.addEventListener('click',()=>comImport(it)); R.appendChild(im);
+      if(it.kind==='hole'){ const bd=document.createElement('button'); bd.className='sbtn'; bd.style.cssText='width:auto;padding:6px 10px;background:#f0a300'; bd.textContent='🏆'; bd.addEventListener('click',()=>openLeaderboard('c:'+it.id,it.name)); R.appendChild(bd); }
       const liked=(progress.liked||[]).includes(it.id); const lk=document.createElement('button'); lk.className='sbtn'; lk.style.cssText='width:auto;padding:6px 11px;background:'+(liked?'#2f9e52':'#c4ccd2'); lk.textContent='\uD83D\uDC4D '+(it.likes||0); lk.addEventListener('click',()=>comLike(it,lk)); R.appendChild(lk);
       if(it.owner && it.owner===progress.pubToken){ const dl=document.createElement('button'); dl.className='sbtn'; dl.style.cssText='width:auto;padding:6px 10px;background:#c4ccd2'; dl.textContent='Delete'; armDelete(dl,()=>comDeleteOwn(it)); R.appendChild(dl); }
       else if(progress.adminSecret){ const ad=document.createElement('button'); ad.className='sbtn'; ad.style.cssText='width:auto;padding:6px 10px;background:#e7513a'; ad.textContent='Del'; armDelete(ad,()=>comAdminDelete(it)); R.appendChild(ad); }
@@ -1283,7 +1329,7 @@ function renderCommunity(){ const box=document.getElementById('comList'); const 
   }).catch(()=>{ box.innerHTML='<p style="color:#e7513a;font-size:13px">Couldn\'t load. Check your connection.</p>'; });
 }
 function armDelete(btn,fn){ let armed=false; const orig=btn.textContent, bg=btn.style.background; btn.addEventListener('click',()=>{ if(!armed){ armed=true; btn.textContent='Sure?'; btn.style.background='#e7513a'; setTimeout(()=>{armed=false;btn.textContent=orig;btn.style.background=bg;},2500); return; } fn(); }); }
-function comPlay(it){ if(it.kind==='course'){ const holes=(it.data&&it.data.holes)||[]; if(!holes.length)return; playCourse({name:it.name,theme:it.theme||'green',holes:holes},'community'); } else { playDef(it.data,'community',it.name); } if(it.id){ const cp=progress.countedPlays||(progress.countedPlays=[]); if(!cp.includes(it.id)){ cp.push(it.id); if(cp.length>400)cp.shift(); saveProgress(); sbRpc('bump_plays',{row_id:it.id}); } } }
+function comPlay(it){ if(it.kind==='course'){ const holes=(it.data&&it.data.holes)||[]; if(!holes.length)return; playCourse({name:it.name,theme:it.theme||'green',holes:holes},'community'); } else { playDef(it.data,'community',it.name); lbKey='c:'+it.id; lbTitle=it.name; loadRaceGhost(lbKey); } if(it.id){ const cp=progress.countedPlays||(progress.countedPlays=[]); if(!cp.includes(it.id)){ cp.push(it.id); if(cp.length>400)cp.shift(); saveProgress(); sbRpc('bump_plays',{row_id:it.id}); } } }
 function comImport(it){ if(it.kind==='course'){ progress.customCourses.push({name:it.name,theme:it.theme||'green',holes:(it.data.holes||[])}); } else { progress.customHoles.push({name:it.name,def:it.data}); } saveProgress(); showModal('Added to My Levels.',[{label:'OK',cls:'sec',fn:hideModal}]); }
 function comLike(it,btn){ if(!it.id)return; const arr=progress.liked||(progress.liked=[]); const i=arr.indexOf(it.id);
   if(i>=0){ arr.splice(i,1); it.likes=Math.max(0,(it.likes||0)-1); sbRpc('bump_likes',{row_id:it.id,delta:-1}); btn.style.background='#c4ccd2'; }
@@ -1338,7 +1384,7 @@ function cbCode(){ const c=cbCourseObj(); const data={n:c.name,th:c.theme,h:c.ho
     {label:'Close',cls:'sec',fn:hideModal}
   ],{area:true,areaVal:code}); }
 function playCourse(course,ret){ playingCourse={name:course.name,theme:course.theme||'green',holes:course.holes,idx:0,results:[],ret:ret||'custom'}; playCourseHole(); }
-function playCourseHole(){ const pc=playingCourse, hd=pc.holes[pc.idx], def=hd.def; if(def.gold==null)computeStars(def); curCourse=-1; curHole=pc.idx; curDef=def; isTutorial=false; falls=0; holeTime=0; running=true; holeStarted=false; recording=[]; recAcc=0; ghostIdx=0; ghostRec=null; curTheme=pc.theme; applyTheme(pc.theme); buildLevel(def,THEME_PAL[pc.theme]||THEME_PAL.green); showScreen(null); state='intro'; introT=0; showBanner('Hole '+(pc.idx+1)+' / '+pc.holes.length, hd.name||'Go!'); updateHUD(); }
+function playCourseHole(){ const pc=playingCourse, hd=pc.holes[pc.idx], def=hd.def; if(def.gold==null)computeStars(def); curCourse=-1; curHole=pc.idx; curDef=def; isTutorial=false; falls=0; holeTime=0; running=true; holeStarted=false; recording=[]; recAcc=0; ghostIdx=0; ghostRec=null; lbKey=null; lbRacing=null; setRaceLabel(); curTheme=pc.theme; applyTheme(pc.theme); buildLevel(def,THEME_PAL[pc.theme]||THEME_PAL.green); showScreen(null); state='intro'; introT=0; showBanner('Hole '+(pc.idx+1)+' / '+pc.holes.length, hd.name||'Go!'); updateHUD(); }
 function showCourseSummary(){ const pc=playingCourse; let tS=0,tT=0; for(const r of pc.results){tS+=r.s;tT+=r.t;}
   document.getElementById('resHole').textContent=pc.name; document.getElementById('resStars').innerHTML='★ '+tS+' / '+(pc.results.length*3); document.getElementById('resTime').innerHTML=tT.toFixed(1)+'s<small>TOTAL TIME</small>';
   let rows=''; pc.results.forEach((r,i)=>{ rows+='<div class="sc-row"><span>H'+(i+1)+' '+(r.name||'')+'</span><b>'+r.t.toFixed(1)+'s '+starStr(r.s)+'</b></div>'; }); document.getElementById('resRows').innerHTML=rows;
@@ -1355,6 +1401,7 @@ function pasteCodeFlow(){ showModal('Paste a hole OR course code and hit Load:',
 ],{area:true,areaVal:''}); }
 document.getElementById('courseCreate').addEventListener('click',()=>openCourseBuilder());
 document.getElementById('pasteCode').addEventListener('click',pasteCodeFlow);
+document.getElementById('lbClose').addEventListener('click',closeLeaderboard);
 document.getElementById('openCommunity').addEventListener('click',openCommunity);
 document.getElementById('comBack').addEventListener('click',openCustom);
 document.getElementById('comRefresh').addEventListener('click',renderCommunity);
