@@ -62,6 +62,9 @@
   .shopGrid { display:grid; grid-template-columns:repeat(4,1fr); gap:9px; margin-top:8px; }
   .shopItem { border:2px solid #e4eef6; border-radius:13px; padding:7px; text-align:center; background:#f7fbfe; transition:transform .07s, box-shadow .1s; }
   .shopItem:hover { transform:translateY(-2px); box-shadow:0 6px 14px rgba(13,43,69,.1); }
+  .addTile { border:2px dashed #e6b0a2 !important; background:#fff7f4 !important; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:104px; cursor:pointer; }
+  .addTile:hover { border-color:#e05a3c !important; background:#fdeee9 !important; transform:translateY(-2px); box-shadow:0 6px 14px rgba(224,90,60,.14); }
+  .addTile .plus { font-size:26px; color:#e05a3c; font-weight:900; line-height:1; }
   .shopItem.eq { border-color:#4dbf6a; background:#eafaef; }
   .shopItem .sw { width:100%; height:42px; border-radius:9px; border:1px solid rgba(0,0,0,.12); background-size:cover; background-position:center; }
   .shopItem .nm { font-size:11.5px; font-weight:800; color:#25506e; margin:5px 0 4px; }
@@ -95,6 +98,8 @@
   .btn.sec { background:linear-gradient(180deg,#6d95b2,#517a98); box-shadow:0 6px 0 #3e6684, 0 10px 20px rgba(62,102,132,.26); }
   .btn.sec:active { box-shadow:0 2px 0 #3e6684, 0 4px 10px rgba(62,102,132,.26); }
   .btnrow { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  #resBtns { max-width:322px; margin-left:auto; margin-right:auto; }
+  #resBtns .btn { margin-top:0; flex:1 1 132px; }
   .btn.small { font-size:15px; padding:11px 22px; box-shadow:0 5px 0 #b3341f, 0 8px 16px rgba(183,52,31,.22); }
   .btn.sec.small { box-shadow:0 5px 0 #3e6684, 0 8px 16px rgba(62,102,132,.2); }
   .hidden { display:none !important; }
@@ -108,12 +113,14 @@
   .courseItem .cs { font-size:12.5px; font-weight:700; color:#5b7a90; margin-top:2px; }
   .courseItem .cr { font-size:22px; font-weight:900; color:#f0a300; white-space:nowrap; }
 
-  #levelGrid { display:grid; grid-template-columns:repeat(6,1fr); gap:9px; margin:16px 0 6px; }
-  .lvl { border-radius:14px; border:2px solid #dbe8f2; background:#f7fbfe; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:9px 4px; transition:transform .07s, box-shadow .1s, border-color .1s; }
+  #levelGrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(76px,1fr)); gap:10px; margin:16px 0 6px; }
+  .lvl { position:relative; border-radius:14px; border:2px solid #dbe8f2; background:#f7fbfe; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:14px 6px 11px; transition:transform .07s, box-shadow .1s, border-color .1s; }
   .lvl:not(.locked):hover { transform:translateY(-2px); box-shadow:0 6px 14px rgba(13,43,69,.12); border-color:#c3dcec; }
-  .lvl .num { font-size:19px; font-weight:900; color:#12405f; }
+  .lvl .num { font-size:20px; font-weight:900; color:#12405f; }
   .lvl .st { font-size:11px; color:#f0a300; font-weight:900; letter-spacing:1px; height:13px; }
   .lvl .pb { font-size:9px; color:#5b7a90; font-weight:700; height:11px; }
+  .lvlbtn { position:absolute; top:4px; right:4px; width:22px; height:22px; border:none; background:rgba(240,163,0,.16); border-radius:7px; font-size:11px; line-height:1; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; }
+  .lvlbtn:hover { background:rgba(240,163,0,.34); }
   .lvl.locked { opacity:.45; cursor:not-allowed; }
   .lvl.done { background:#eafaef; border-color:#bfe8cd; }
 
@@ -221,9 +228,10 @@
       <div class="sc-time" id="resTime">0.0s<small>YOUR TIME</small></div>
       <div class="sc-rows" id="resRows"></div>
       <div class="sc-note" id="resPB" style="color:#1f8a4c"></div>
+      <div class="sc-note" id="resRank" style="color:#12405f;font-weight:800"></div>
       <div class="sc-note" id="resUnlock" style="color:#c0392b"></div>
     </div>
-    <div class="btnrow" id="resBtns" style="margin-top:16px"></div>
+    <div class="btnrow" id="resBtns" style="margin:16px auto 0"></div>
   </div>
 </div>
 
@@ -242,9 +250,9 @@
 <div class="screen hidden" id="customScreen">
   <div class="card" style="max-width:660px">
     <h1>My Levels</h1>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><h2 style="font-size:18px">Holes</h2><button class="btn small" id="customCreate" style="margin-top:0">＋ Create Hole</button></div>
+    <h2 style="font-size:18px;text-align:left;margin:14px 0 0">Holes</h2>
     <div id="customGrid" class="shopGrid" style="grid-template-columns:repeat(3,1fr)"></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px"><h2 style="font-size:18px">Courses</h2><button class="btn small" id="courseCreate" style="margin-top:0">＋ Create Course</button></div>
+    <h2 style="font-size:18px;text-align:left;margin:18px 0 0">Courses</h2>
     <div id="courseGrid" class="shopGrid" style="grid-template-columns:repeat(3,1fr)"></div>
     <div class="btnrow" style="margin-top:16px"><button class="btn sec small" id="pasteCode">Paste a Code</button><button class="btn small" id="openCommunity" style="margin-top:0">Community</button><button class="btn sec small" id="customBack">Back</button></div>
   </div>
@@ -1003,11 +1011,13 @@ function openLevels(ci){ curCourse=ci; state='menu'; const c=COURSES[ci];
   document.getElementById('levelTitle').textContent=c.name;
   if(c.kind==='tutorial') document.getElementById('levelSub').textContent='Four quick lessons. Finish them to unlock Course 1.';
   else { let earned=0; for(let i=0;i<c.holes.length;i++)earned+=starsOf(ci,i); document.getElementById('levelSub').textContent=earned+' / '+(c.holes.length*3)+' stars earned'; }
-  const grid=document.getElementById('levelGrid'); grid.innerHTML=''; grid.style.gridTemplateColumns=(c.holes.length<=6)?'repeat('+Math.max(3,c.holes.length)+',1fr)':'repeat(6,1fr)';
+  const grid=document.getElementById('levelGrid'); grid.innerHTML=''; grid.style.gridTemplateColumns='repeat(auto-fill,minmax(76px,1fr))';
   c.holes.forEach((h,hi)=>{ const un=holeUnlocked(ci,hi), st=starsOf(ci,hi), pb=bestOf(ci,hi);
     const b=document.createElement('div'); b.className='lvl'+(un?'':' locked')+(st>0?' done':'');
     b.innerHTML='<div class="num">'+(hi+1)+'</div><div class="st">'+(un?(st>0?starStr(st):''):'🔒')+'</div><div class="pb">'+(pb!=null?fmt1(pb):'')+'</div>';
-    if(un)b.addEventListener('click',()=>startHole(ci,hi)); grid.appendChild(b); });
+    if(un)b.addEventListener('click',()=>startHole(ci,hi));
+    if(un && ci>0){ const lb=document.createElement('button'); lb.className='lvlbtn'; lb.textContent='🏆'; lb.title='Leaderboard'; lb.addEventListener('click',e=>{ e.stopPropagation(); openLeaderboard('b:'+ci+':'+hi, c.name+' \u00b7 Hole '+(hi+1)); }); b.appendChild(lb); }
+    grid.appendChild(b); });
   showScreen('levelScreen');
 }
 function starsForTime(def,t){ if(t<=def.gold)return 3; if(t<=def.silver)return 2; return 1; }
@@ -1020,10 +1030,25 @@ function startHole(ci,hi){ curCourse=ci; curHole=hi; const c=COURSES[ci]; curDef
   buildLevel(curDef,pal); showScreen(null); state='intro'; introT=0; showBanner(isTutorial?('Lesson '+(hi+1)):('Hole '+(hi+1)),'Go!'); updateHUD(); }
 function finishHole(){
   if(playingCourse){ const t=holeTime, s=starsForTime(curDef,t); playingCourse.results.push({name:(playingCourse.holes[playingCourse.idx].name||('Hole '+(playingCourse.idx+1))),t,s}); progress.coins+=coinsThisRun; saveProgress(); playingCourse.idx++; if(playingCourse.idx<playingCourse.holes.length){ playCourseHole(); return; } showCourseSummary(); return; }
-  if(testing){ if(lbKey)submitScore(lbKey,holeTime,recording); testing=false; document.getElementById('resHole').textContent=(testReturn==='custom'?'Cleared':'Test Run'); document.getElementById('resStars').innerHTML='⛳'; document.getElementById('resTime').innerHTML=fmt1(holeTime)+'<small>YOUR TIME</small>'; document.getElementById('resRows').innerHTML='<div class="sc-row"><span>Result</span><b>The hole works!</b></div><div class="sc-row"><span>★★★ under</span><b>'+curDef.gold+'s</b></div>'; document.getElementById('resPB').textContent=''; document.getElementById('resUnlock').textContent='';
+  if(testing){ if(lbKey)submitScore(lbKey,holeTime,recording); testing=false;
     const bt=document.getElementById('resBtns'); bt.innerHTML=''; const mk=(l,c,fn)=>{const b=document.createElement('button');b.className='btn '+c+' small';b.textContent=l;b.addEventListener('click',fn);bt.appendChild(b);};
-    if(testReturn==='community'){ if(lbKey)mk('Leaderboard','sec',()=>openLeaderboard(lbKey)); mk('Back to Community','',openCommunity); } else if(testReturn==='custom'){ mk('Play Again','sec',()=>playCustom(testIdx)); mk('My Levels','',openCustom); } else { mk('Test Again','sec',creTest); mk('Back to Editor','',openCreator); }
-    state='result'; showScreen('resultScreen'); return; }
+    if(testReturn==='community'){
+      const t=holeTime, s=starsForTime(curDef,t); const lbb=(progress.lbBest||{})[lbKey];
+      document.getElementById('resHole').textContent=lbTitle||'Community';
+      document.getElementById('resStars').innerHTML=starHtml(s);
+      document.getElementById('resTime').innerHTML=fmt1(t)+'<small>YOUR TIME</small>';
+      let rows='<div class="sc-row"><span>Best</span><b>'+(lbb!=null?fmt1(lbb):fmt1(t))+'</b></div>';
+      rows+='<div class="sc-row"><span>★★★ under</span><b>'+curDef.gold+'s</b></div>';
+      rows+='<div class="sc-row"><span>★★ under</span><b>'+curDef.silver+'s</b></div>';
+      if(falls) rows+='<div class="sc-row"><span>Penalties</span><b>+'+(falls*FALL_PENALTY)+'s ('+falls+' fall'+(falls>1?'s':'')+')</b></div>';
+      document.getElementById('resRows').innerHTML=rows; document.getElementById('resPB').textContent='';
+      if(lastComItem)mk('Retry','sec',()=>comPlay(lastComItem)); if(lbKey)mk('Leaderboard','sec',()=>openLeaderboard(lbKey)); mk('Back to Community','',openCommunity);
+      showRank(lbKey,t);
+    } else {
+      document.getElementById('resHole').textContent=(testReturn==='custom'?'Cleared':'Test Run'); document.getElementById('resStars').innerHTML='⛳'; document.getElementById('resTime').innerHTML=fmt1(holeTime)+'<small>YOUR TIME</small>'; document.getElementById('resRows').innerHTML='<div class="sc-row"><span>Result</span><b>The hole works!</b></div><div class="sc-row"><span>★★★ under</span><b>'+curDef.gold+'s</b></div>'; document.getElementById('resPB').textContent=''; document.getElementById('resRank').textContent='';
+      if(testReturn==='custom'){ mk('Play Again','sec',()=>playCustom(testIdx)); mk('My Levels','',openCustom); } else { mk('Test Again','sec',creTest); mk('Back to Editor','',openCreator); }
+    }
+    document.getElementById('resUnlock').textContent=''; state='result'; showScreen('resultScreen'); return; }
   const wasUn=COURSES.map((_,i)=>courseUnlocked(i));
   const t=holeTime, s=starsForTime(curDef,t); const prevTotal=totalStars(); setStars(curCourse,curHole,s); const isBest=setBest(curCourse,curHole,t); const pb=bestOf(curCourse,curHole);
   progress.coins+=coinsThisRun;
@@ -1041,6 +1066,7 @@ function finishHole(){
   if(falls) rows+='<div class="sc-row"><span>Penalties</span><b>+'+(falls*FALL_PENALTY)+'s ('+falls+' fall'+(falls>1?'s':'')+')</b></div>';
   document.getElementById('resRows').innerHTML=rows;
   document.getElementById('resPB').textContent=isBest?'New best! Ghost saved':'';
+  showRank(lbKey,t);
   const ru=document.getElementById('resUnlock'); ru.textContent='';
   for(let i=1;i<COURSES.length;i++){ if(!wasUn[i] && courseUnlocked(i)){ ru.textContent=COURSES[i].name+' unlocked!'; break; } }
   if(ru.textContent) sfx('unlock');
@@ -1250,18 +1276,17 @@ function creSaveHole(){ if(!creValid()){ showModal('You need a Start, a Cup, and
     {label:'Cancel',cls:'sec',fn:hideModal}
   ],{text:true,textVal:'My Hole'}); }
 function openCreator(){ showScreen('creatorScreen'); if(!creCanvas){ creCanvas=document.getElementById('creCanvas'); creCtx=creCanvas.getContext('2d'); creCanvas.addEventListener('pointerdown',e=>{ const r=creCanvas.getBoundingClientRect(); const sx=e.clientX-r.left, sy=e.clientY-r.top; if(creTool==='pan'){ creDrag=true; creLast=[e.clientX,e.clientY]; } else creClick(sx,sy); }); creCanvas.addEventListener('pointermove',e=>{ if(creDrag){ crePanX-=(e.clientX-creLast[0])/creScale; crePanZ-=(e.clientY-creLast[1])/creScale; creLast=[e.clientX,e.clientY]; creDraw(); return; } const r=creCanvas.getBoundingClientRect(); crePrev=s2w(e.clientX-r.left, e.clientY-r.top); creDraw(); }); creCanvas.addEventListener('pointerleave',()=>{ crePrev=null; creDraw(); }); window.addEventListener('pointerup',()=>{creDrag=false;}); } creResize(); creDraw(); if(!progress.creSeen){ progress.creSeen=true; saveProgress(); document.getElementById('creHelp').classList.remove('hidden'); } }
-function openCustom(){ const grid=document.getElementById('customGrid'); grid.innerHTML=''; const list=progress.customHoles;
-  if(!list.length){ grid.innerHTML='<p style="grid-column:1/-1;color:#5b7a90;font-size:13px">No levels yet. Tap Create New to build one.</p>'; }
-  list.forEach((h,i)=>{ const div=document.createElement('div'); div.className='shopItem';
+function addTile(label,fn){ const d=document.createElement('div'); d.className='shopItem addTile'; d.innerHTML='<div class="plus">＋</div><div class="nm" style="font-size:13px;margin-top:3px">'+label+'</div>'; d.addEventListener('click',fn); return d; }
+function openCustom(){ const grid=document.getElementById('customGrid'); grid.innerHTML=''; grid.appendChild(addTile('Create Hole',()=>{ creReset(); openCreator(); }));
+  progress.customHoles.forEach((h,i)=>{ const div=document.createElement('div'); div.className='shopItem';
     const nm=document.createElement('div'); nm.className='nm'; nm.style.fontSize='13px'; nm.textContent=h.name; div.appendChild(nm);
     const play=document.createElement('button'); play.className='sbtn'; play.textContent='Play'; play.addEventListener('click',()=>playCustom(i)); div.appendChild(play);
     const ed=document.createElement('button'); ed.className='sbtn'; ed.style.cssText='background:#5b86a6;margin-top:4px'; ed.textContent='Edit'; ed.addEventListener('click',()=>{ loadDefIntoCreator(h.def); openCreator(); }); div.appendChild(ed);
     if(sbReady()){ const pub=document.createElement('button'); pub.className='sbtn'; pub.style.cssText='background:#2f9e52;margin-top:4px'; pub.textContent='Publish'; pub.addEventListener('click',()=>publishItem('hole',h.name,'mix',h.def)); div.appendChild(pub); }
     const del=document.createElement('button'); del.className='sbtn'; del.style.cssText='background:#c4ccd2;margin-top:4px'; del.textContent='Delete'; let armed=false; del.addEventListener('click',()=>{ if(!armed){ armed=true; del.textContent='Sure?'; del.style.background='#e7513a'; setTimeout(()=>{armed=false;del.textContent='Delete';del.style.background='#c4ccd2';},2500); return; } progress.customHoles.splice(i,1); saveProgress(); openCustom(); }); div.appendChild(del);
     grid.appendChild(div); });
-  const cg=document.getElementById('courseGrid'); cg.innerHTML=''; const cl=progress.customCourses;
-  if(!cl.length){ cg.innerHTML='<p style="grid-column:1/-1;color:#5b7a90;font-size:13px">No courses yet. Build one from your holes.</p>'; }
-  cl.forEach((c,i)=>{ const div=document.createElement('div'); div.className='shopItem'; const nm=document.createElement('div');nm.className='nm';nm.style.fontSize='13px';nm.textContent=c.name+' · '+c.holes.length+'h';div.appendChild(nm);
+  const cg=document.getElementById('courseGrid'); cg.innerHTML=''; cg.appendChild(addTile('Create Course',()=>openCourseBuilder()));
+  progress.customCourses.forEach((c,i)=>{ const div=document.createElement('div'); div.className='shopItem'; const nm=document.createElement('div');nm.className='nm';nm.style.fontSize='13px';nm.textContent=c.name+' · '+c.holes.length+'h';div.appendChild(nm);
     const play=document.createElement('button');play.className='sbtn';play.textContent='Play';play.addEventListener('click',()=>playCourse(c,'custom'));div.appendChild(play);
     const ed=document.createElement('button');ed.className='sbtn';ed.style.cssText='background:#5b86a6;margin-top:4px';ed.textContent='Edit';ed.addEventListener('click',()=>openCourseBuilder(c));div.appendChild(ed);
     if(sbReady()){ const pub=document.createElement('button');pub.className='sbtn';pub.style.cssText='background:#2f9e52;margin-top:4px';pub.textContent='Publish';pub.addEventListener('click',()=>publishItem('course',c.name,c.theme||'green',{holes:c.holes}));div.appendChild(pub); }
@@ -1271,7 +1296,7 @@ function openCustom(){ const grid=document.getElementById('customGrid'); grid.in
 }
 function playCustom(i){ const h=progress.customHoles[i]; if(!h)return; testIdx=i; playDef(h.def,'custom',h.name); }
 function esc(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
-let lbKey=null, lbTitle='', lbRacing=null;
+let lbKey=null, lbTitle='', lbRacing=null, lastComItem=null;
 function titleForKey(key){ if(!key)return''; if(key[0]==='b'){ const p=key.split(':'); const c=COURSES[+p[1]]; return (c?c.name:'Course')+' \u00b7 Hole '+((+p[2])+1); } return lbTitle||'Community hole'; }
 function submitScore(key,t,ghost){ if(!sbReady()||!key)return; const lb=progress.lbBest||(progress.lbBest={}); if(lb[key]!=null && t>=lb[key])return; lb[key]=t; saveProgress(); const g=(ghost&&ghost.length>1&&ghost.length<2400)?ghost:null; sbRpc('submit_score',{p_level:key,p_player:progress.pubToken,p_name:(progress.author||'anon'),p_time:Math.round(t*100)/100,p_ghost:g}); }
 function setRaceLabel(){ const el=document.getElementById('raceLabel'); if(!el)return; if(lbRacing){ el.textContent='\uD83C\uDFC1 Racing '+lbRacing.name+' \u00b7 '+fmt1(lbRacing.time); el.style.display='block'; } else el.style.display='none'; }
@@ -1287,6 +1312,7 @@ function openLeaderboard(key,title){ if(!key)return; if(title)lbTitle=title; doc
   }).catch(()=>{ box.innerHTML='<p style="color:#e7513a;font-size:13px">Couldn\'t load the leaderboard.</p>'; });
 }
 function closeLeaderboard(){ document.getElementById('lbModal').style.display='none'; }
+function showRank(key,t){ const el=document.getElementById('resRank'); if(!el)return; el.textContent=''; if(!sbReady()||!key)return; sbGet('scores?level_key=eq.'+encodeURIComponent(key)+'&time=lt.'+(Math.round(t*100)/100)+'&select=id').then(r=>{ const rank=(r?r.length:0)+1; el.textContent="You're #"+rank+' on this hole'; }).catch(()=>{}); }
 function publishItem(kind,name,theme,data){
   if(!sbReady()){ showModal('Community is not set up yet.',[{label:'OK',cls:'sec',fn:hideModal}]); return; }
   const nm=cleanName(name); if(!nm){ showModal('That name can\'t be published \u2014 try renaming it first.',[{label:'OK',cls:'sec',fn:hideModal}]); return; }
@@ -1329,7 +1355,7 @@ function renderCommunity(){ const box=document.getElementById('comList'); const 
   }).catch(()=>{ box.innerHTML='<p style="color:#e7513a;font-size:13px">Couldn\'t load. Check your connection.</p>'; });
 }
 function armDelete(btn,fn){ let armed=false; const orig=btn.textContent, bg=btn.style.background; btn.addEventListener('click',()=>{ if(!armed){ armed=true; btn.textContent='Sure?'; btn.style.background='#e7513a'; setTimeout(()=>{armed=false;btn.textContent=orig;btn.style.background=bg;},2500); return; } fn(); }); }
-function comPlay(it){ if(it.kind==='course'){ const holes=(it.data&&it.data.holes)||[]; if(!holes.length)return; playCourse({name:it.name,theme:it.theme||'green',holes:holes},'community'); } else { playDef(it.data,'community',it.name); lbKey='c:'+it.id; lbTitle=it.name; loadRaceGhost(lbKey); } if(it.id){ const cp=progress.countedPlays||(progress.countedPlays=[]); if(!cp.includes(it.id)){ cp.push(it.id); if(cp.length>400)cp.shift(); saveProgress(); sbRpc('bump_plays',{row_id:it.id}); } } }
+function comPlay(it){ if(it.kind==='course'){ const holes=(it.data&&it.data.holes)||[]; if(!holes.length)return; playCourse({name:it.name,theme:it.theme||'green',holes:holes},'community'); } else { playDef(it.data,'community',it.name); lbKey='c:'+it.id; lbTitle=it.name; lastComItem=it; loadRaceGhost(lbKey); } if(it.id){ const cp=progress.countedPlays||(progress.countedPlays=[]); if(!cp.includes(it.id)){ cp.push(it.id); if(cp.length>400)cp.shift(); saveProgress(); sbRpc('bump_plays',{row_id:it.id}); } } }
 function comImport(it){ if(it.kind==='course'){ progress.customCourses.push({name:it.name,theme:it.theme||'green',holes:(it.data.holes||[])}); } else { progress.customHoles.push({name:it.name,def:it.data}); } saveProgress(); showModal('Added to My Levels.',[{label:'OK',cls:'sec',fn:hideModal}]); }
 function comLike(it,btn){ if(!it.id)return; const arr=progress.liked||(progress.liked=[]); const i=arr.indexOf(it.id);
   if(i>=0){ arr.splice(i,1); it.likes=Math.max(0,(it.likes||0)-1); sbRpc('bump_likes',{row_id:it.id,delta:-1}); btn.style.background='#c4ccd2'; }
@@ -1348,7 +1374,6 @@ document.getElementById('creClear').addEventListener('click',()=>{ showModal('Cl
 document.getElementById('creHelpBtn').addEventListener('click',()=>document.getElementById('creHelp').classList.remove('hidden'));
 document.getElementById('creHelpClose').addEventListener('click',()=>document.getElementById('creHelp').classList.add('hidden'));
 document.getElementById('creExit').addEventListener('click',openCustom);
-document.getElementById('customCreate').addEventListener('click',()=>{ creReset(); openCreator(); });
 document.getElementById('customBack').addEventListener('click',openCourses);
 window.addEventListener('resize',()=>{ if(creCanvas && !document.getElementById('creatorScreen').classList.contains('hidden')){ creResize(); creDraw(); } });
 
@@ -1388,7 +1413,7 @@ function playCourseHole(){ const pc=playingCourse, hd=pc.holes[pc.idx], def=hd.d
 function showCourseSummary(){ const pc=playingCourse; let tS=0,tT=0; for(const r of pc.results){tS+=r.s;tT+=r.t;}
   document.getElementById('resHole').textContent=pc.name; document.getElementById('resStars').innerHTML='★ '+tS+' / '+(pc.results.length*3); document.getElementById('resTime').innerHTML=tT.toFixed(1)+'s<small>TOTAL TIME</small>';
   let rows=''; pc.results.forEach((r,i)=>{ rows+='<div class="sc-row"><span>H'+(i+1)+' '+(r.name||'')+'</span><b>'+r.t.toFixed(1)+'s '+starStr(r.s)+'</b></div>'; }); document.getElementById('resRows').innerHTML=rows;
-  document.getElementById('resPB').textContent='Course complete!'; document.getElementById('resUnlock').textContent='';
+  document.getElementById('resPB').textContent='Course complete!'; document.getElementById('resUnlock').textContent=''; document.getElementById('resRank').textContent='';
   const bt=document.getElementById('resBtns'); bt.innerHTML=''; const cp={name:pc.name,theme:pc.theme,holes:pc.holes}, ret=pc.ret; const mk=(l,c,fn)=>{const b=document.createElement('button');b.className='btn '+c+' small';b.textContent=l;b.addEventListener('click',fn);bt.appendChild(b);};
   mk('Replay','sec',()=>playCourse(cp,ret)); if(ret==='builder')mk('Back to Builder','',()=>{playingCourse=null;showScreen('courseBuilderScreen');renderCB();}); else if(ret==='community')mk('Back to Community','',()=>{playingCourse=null;openCommunity();}); else mk('My Levels','',()=>{playingCourse=null;openCustom();});
   playingCourse=null; state='result'; showScreen('resultScreen'); }
@@ -1399,7 +1424,6 @@ function pasteCodeFlow(){ showModal('Paste a hole OR course code and hit Load:',
     else throw 0; saveProgress(); hideModal(); openCustom(); }catch(e){ document.getElementById('creModalMsg').textContent='That code was not valid.'; } }},
   {label:'Cancel',cls:'sec',fn:hideModal}
 ],{area:true,areaVal:''}); }
-document.getElementById('courseCreate').addEventListener('click',()=>openCourseBuilder());
 document.getElementById('pasteCode').addEventListener('click',pasteCodeFlow);
 document.getElementById('lbClose').addEventListener('click',closeLeaderboard);
 document.getElementById('openCommunity').addEventListener('click',openCommunity);
