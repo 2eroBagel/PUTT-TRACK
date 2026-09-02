@@ -253,6 +253,7 @@
   <div class="card" style="max-width:660px">
     <h1 id="comTitle">Community</h1>
     <p style="margin-top:4px">Play courses and holes other players have shared, or publish your own from My Levels.</p>
+    <div id="comStats" style="font-size:12px;font-weight:800;color:#2f9e52;margin-top:2px"></div>
     <div class="btnrow" style="margin-top:12px">
       <button class="btn small" id="comTabCourses" style="margin-top:0">Courses</button>
       <button class="btn sec small" id="comTabHoles" style="margin-top:0">Holes</button>
@@ -595,6 +596,8 @@ document.getElementById('skipTut').addEventListener('click',finishTutorialLandin
 document.getElementById('schemeBtn').addEventListener('click',()=>{ progress.touchScheme=(progress.touchScheme==='drag')?'buttons':'drag'; saveProgress(); applyScheme(); });
 if(isTouch)setupTouch();
 applyScheme();
+function trackVisit(){ try{ if(sbReady() && !sessionStorage.getItem('pt_visited')){ sessionStorage.setItem('pt_visited','1'); sbRpc('bump_visits',{}); } }catch(e){} }
+trackVisit();
 function starsOf(ci,hi){ const a=progress.stars[ci]; return (a&&a[hi])||0; }
 function setStars(ci,hi,s){ if(!progress.stars[ci])progress.stars[ci]=[]; if(s>(progress.stars[ci][hi]||0)){progress.stars[ci][hi]=s;saveProgress();} }
 function bestOf(ci,hi){ const a=progress.best[ci]; return (a&&a[hi])||null; }
@@ -1257,6 +1260,7 @@ let comTab='course', comSort='created_at.desc', comQuery='', comSearchTimer=null
 function openCommunity(){ showScreen('communityScreen'); setComTab(comTab); }
 function setComTab(tab){ comTab=tab; comPage=0; document.getElementById('comTabCourses').className='btn small'+(tab==='course'?'':' sec'); document.getElementById('comTabHoles').className='btn small'+(tab==='hole'?'':' sec'); renderCommunity(); }
 function renderCommunity(){ const box=document.getElementById('comList'); const pager=document.getElementById('comPager'); pager.innerHTML=''; box.innerHTML='<p style="color:#5b7a90;font-size:13px">Loading\u2026</p>';
+  const st=document.getElementById('comStats'); if(st){ if(progress.adminSecret && sbReady()){ sbGet('stats?key=eq.visits').then(r=>{ st.textContent=(r&&r[0])?('\uD83D\uDC41 '+r[0].count+' total visits'):''; }).catch(()=>{}); } else st.textContent=''; }
   if(!sbReady()){ box.innerHTML='<p style="color:#5b7a90;font-size:13px">Community isn\'t set up yet.</p>'; return; }
   function buildPager(hasNext){ pager.innerHTML=''; const mk=(label,disabled,fn)=>{ const b=document.createElement('button'); b.className='btn sec small'; b.textContent=label; b.style.marginTop='0'; if(disabled){ b.disabled=true; b.style.opacity='.4'; } else b.addEventListener('click',fn); pager.appendChild(b); };
     if(comPage>0||hasNext){ mk('\u2039 Prev', comPage===0, ()=>{ comPage--; renderCommunity(); }); const lbl=document.createElement('span'); lbl.textContent='Page '+(comPage+1); lbl.style.cssText='align-self:center;font-size:13px;color:#5b7a90;font-weight:800'; pager.appendChild(lbl); mk('Next \u203A', !hasNext, ()=>{ comPage++; renderCommunity(); }); } }
