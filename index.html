@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>PUTT TRACK</title>
+<meta name="description" content="A low-poly mini golf game. Steer a golf ball across floating tracks, beat the target times, and build and share your own courses.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="PUTT TRACK">
+<meta property="og:description" content="A low-poly mini golf game. Steer a golf ball across floating tracks, beat the target times, and build and share your own courses.">
+<meta property="og:image" content="https://2erobagel.github.io/PUTT-TRACK/og_image.png">
+<meta property="og:url" content="https://2erobagel.github.io/PUTT-TRACK/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PUTT TRACK">
+<meta name="twitter:description" content="A low-poly mini golf game. Steer, clear the gaps, and share your own courses.">
+<meta name="twitter:image" content="https://2erobagel.github.io/PUTT-TRACK/og_image.png">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html,body { width:100%; height:100%; overflow:hidden; background:#bfe3ff; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; -webkit-user-select:none; user-select:none; }
@@ -241,14 +251,23 @@
 
 <div class="screen hidden" id="communityScreen">
   <div class="card" style="max-width:660px">
-    <h1>Community</h1>
+    <h1 id="comTitle">Community</h1>
     <p style="margin-top:4px">Play courses and holes other players have shared, or publish your own from My Levels.</p>
     <div class="btnrow" style="margin-top:12px">
       <button class="btn small" id="comTabCourses" style="margin-top:0">Courses</button>
       <button class="btn sec small" id="comTabHoles" style="margin-top:0">Holes</button>
       <button class="btn sec small" id="comRefresh" style="margin-top:0">↻ Refresh</button>
     </div>
-    <div id="comList" class="courseList" style="min-height:90px;max-height:52vh;overflow:auto"></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <input id="comSearch" placeholder="Search name or author" style="flex:1;padding:9px 12px;border:1px solid #d6e6f3;border-radius:10px;font-size:13px;font-family:inherit">
+      <select id="comSort" style="padding:9px;border:1px solid #d6e6f3;border-radius:10px;font-size:13px;font-family:inherit;background:#fff">
+        <option value="created_at.desc">Recent</option>
+        <option value="plays.desc">Most played</option>
+        <option value="likes.desc">Most liked</option>
+      </select>
+    </div>
+    <div id="comList" class="courseList" style="min-height:90px;max-height:46vh;overflow:auto"></div>
+    <div id="comPager" class="btnrow" style="margin-top:8px;gap:8px"></div>
     <div class="btnrow"><button class="btn sec small" id="comBack">Back</button></div>
   </div>
 </div>
@@ -499,7 +518,7 @@ const THEME_PAL={ green:{track:0x6ec06e,ramp:0x58a85a}, desert:{track:0xe0c48a,r
 
 // ---------- progress ----------
 let progress={stars:{},best:{},coins:0,ghosts:{}};
-function ensureDefaults(){ if(!progress.stars)progress.stars={}; if(!progress.best)progress.best={}; if(progress.coins==null)progress.coins=0; if(!progress.ghosts)progress.ghosts={}; if(!progress.ownedSkins)progress.ownedSkins=['classic']; if(!progress.ownedTrails)progress.ownedTrails=['none']; if(!progress.skin)progress.skin='classic'; if(!progress.trail)progress.trail='none'; if(!progress.customHoles)progress.customHoles=[]; if(!progress.customCourses)progress.customCourses=[]; if(progress.muted==null)progress.muted=false; if(progress.seenTutorial==null)progress.seenTutorial=false; if(!progress.touchScheme)progress.touchScheme='buttons'; if(progress.author==null)progress.author=''; }
+function ensureDefaults(){ if(!progress.stars)progress.stars={}; if(!progress.best)progress.best={}; if(progress.coins==null)progress.coins=0; if(!progress.ghosts)progress.ghosts={}; if(!progress.ownedSkins)progress.ownedSkins=['classic']; if(!progress.ownedTrails)progress.ownedTrails=['none']; if(!progress.skin)progress.skin='classic'; if(!progress.trail)progress.trail='none'; if(!progress.customHoles)progress.customHoles=[]; if(!progress.customCourses)progress.customCourses=[]; if(progress.muted==null)progress.muted=false; if(progress.seenTutorial==null)progress.seenTutorial=false; if(!progress.touchScheme)progress.touchScheme='buttons'; if(progress.author==null)progress.author=''; if(!progress.pubToken)progress.pubToken=rndId(); if(!progress.liked)progress.liked=[]; if(progress.adminSecret==null)progress.adminSecret=''; if(progress.lastPublish==null)progress.lastPublish=0; if(!progress.countedPlays)progress.countedPlays=[]; }
 
 /* ===== COMMUNITY / SUPABASE CONFIG =====================================
    Paste your Supabase Project URL and anon public key between the quotes.
@@ -513,8 +532,15 @@ function sbHead(extra){ const h=Object.assign({apikey:SB_KEY}, extra||{}); if(/^
 async function sbGet(path){ const r=await fetch(SB_URL+'/rest/v1/'+path,{headers:sbHead()}); if(!r.ok)throw new Error('load failed'); return r.json(); }
 async function sbPost(path,body){ const r=await fetch(SB_URL+'/rest/v1/'+path,{method:'POST',headers:sbHead({'Content-Type':'application/json',Prefer:'return=minimal'}),body:JSON.stringify(body)}); if(!r.ok)throw new Error('save failed'); }
 async function sbRpc(fn,args){ try{ await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:sbHead({'Content-Type':'application/json'}),body:JSON.stringify(args)}); }catch(e){} }
-const BADWORDS=['fuck','shit','bitch','cunt','nigger','faggot','retard','rape','nazi'];
-function cleanName(s){ s=(s||'').trim().slice(0,26); const low=s.toLowerCase(); for(const w of BADWORDS){ if(low.includes(w)) return null; } return s; }
+const BAD_SUB=['fuck','shit','bitch','cunt','nigger','nigga','faggot','retard','nazi','whore','slut','kike','spic','chink','wetback','tranny','molest','pedophile','asshole','motherfuck','rapist','beaner','coon','fuk','fuc'];
+const BAD_WORD=['ass','dick','cock','cum','sex','anal','fag','rape','porn','penis','vagina','pussy','twat','wank','jizz','bastard','damn'];
+function normLeet(s){ return (s||'').toLowerCase().replace(/0/g,'o').replace(/1/g,'i').replace(/3/g,'e').replace(/4/g,'a').replace(/5/g,'s').replace(/7/g,'t').replace(/8/g,'b').replace(/@/g,'a').replace(/\$/g,'s'); }
+function isClean(s){ const t=normLeet(s); const flat=t.replace(/[^a-z0-9]/g,''); for(const w of BAD_SUB){ if(flat.includes(w)) return false; } const toks=t.split(/[^a-z0-9]+/).filter(Boolean); for(const tok of toks){ if(BAD_WORD.includes(tok)) return false; } return true; }
+function cleanName(s){ s=(s||'').trim().slice(0,26); if(!s) return ''; return isClean(s)?s:null; }
+function contentClean(kind,data){ const chk=(def)=>{ if(!def||!def.signs)return true; for(const s of def.signs){ if(s&&s[0]&&!isClean(String(s[0])))return false; } return true; }; if(kind==='course'){ const hs=(data&&data.holes)||[]; for(const h of hs){ if(!chk(h&&h.def))return false; } return true; } return chk(data); }
+function rndId(){ try{ return crypto.randomUUID(); }catch(e){ return 'u'+Math.random().toString(36).slice(2)+Date.now().toString(36); } }
+function ago(ts){ if(!ts)return''; const d=(Date.now()-new Date(ts).getTime())/1000; if(d<60)return'just now'; if(d<3600)return Math.floor(d/60)+'m ago'; if(d<86400)return Math.floor(d/3600)+'h ago'; if(d<2592000)return Math.floor(d/86400)+'d ago'; return Math.floor(d/2592000)+'mo ago'; }
+async function sbRpcCall(fn,args){ const r=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{method:'POST',headers:sbHead({'Content-Type':'application/json'}),body:JSON.stringify(args)}); if(!r.ok)throw new Error('rpc'); const t=await r.text(); try{return JSON.parse(t);}catch(e){return t;} }
 function loadProgress(){ try{ const r=localStorage.getItem('putttrack'); if(r)progress=JSON.parse(r); }catch(e){} ensureDefaults(); }
 function saveProgress(){ try{ localStorage.setItem('putttrack',JSON.stringify(progress)); }catch(e){} }
 // ===== AUDIO =====
@@ -1216,34 +1242,51 @@ function esc(s){ return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&
 function publishItem(kind,name,theme,data){
   if(!sbReady()){ showModal('Community is not set up yet.',[{label:'OK',cls:'sec',fn:hideModal}]); return; }
   const nm=cleanName(name); if(!nm){ showModal('That name can\'t be published \u2014 try renaming it first.',[{label:'OK',cls:'sec',fn:hideModal}]); return; }
-  const go=(author)=>{ showModal('Publishing \u201c'+esc(nm)+'\u201d\u2026',[]); sbPost('shared',{kind:kind,name:nm,author:author||'anon',theme:theme,data:data,plays:0})
-      .then(()=>showModal('Published! It\'s live in Community now.',[{label:'Nice',cls:'sec',fn:hideModal}]))
+  const since=Date.now()-(progress.lastPublish||0); if(since<20000){ showModal('Hold on \u2014 you can publish again in '+Math.ceil((20000-since)/1000)+'s.',[{label:'OK',cls:'sec',fn:hideModal}]); return; }
+  if(!contentClean(kind,data)){ showModal('A sign in this level has text that can\'t be published \u2014 edit it and try again.',[{label:'OK',cls:'sec',fn:hideModal}]); return; }
+  const go=(author)=>{ author=cleanName(author)||'anon'; showModal('Publishing \u201c'+esc(nm)+'\u201d\u2026',[]); sbPost('shared',{kind:kind,name:nm,author:author,theme:theme,data:data,plays:0,likes:0,owner:progress.pubToken})
+      .then(()=>{ progress.lastPublish=Date.now(); saveProgress(); showModal('Published! It\'s live in Community now.',[{label:'Nice',cls:'sec',fn:hideModal}]); })
       .catch(()=>showModal('Could not publish. Check your connection and try again.',[{label:'OK',cls:'sec',fn:hideModal}])); };
   if(progress.author){ go(progress.author); }
   else { showModal('Pick a display name to publish under:',[
-    {label:'Publish',fn:()=>{ const a=cleanName(document.getElementById('creModalText').value)||'anon'; progress.author=a; saveProgress(); hideModal(); go(a); }},
+    {label:'Publish',fn:()=>{ const raw=document.getElementById('creModalText').value; const a=cleanName(raw); if(a===null){ document.getElementById('creModalMsg').textContent='That name isn\'t allowed \u2014 pick another.'; return; } progress.author=a||'anon'; saveProgress(); hideModal(); go(progress.author); }},
     {label:'Cancel',cls:'sec',fn:hideModal} ],{text:true,textVal:''}); }
 }
-let comTab='course';
+const COM_PAGE=12;
+let comTab='course', comSort='created_at.desc', comQuery='', comSearchTimer=null, comPage=0;
 function openCommunity(){ showScreen('communityScreen'); setComTab(comTab); }
-function setComTab(tab){ comTab=tab; document.getElementById('comTabCourses').className='btn small'+(tab==='course'?'':' sec'); document.getElementById('comTabHoles').className='btn small'+(tab==='hole'?'':' sec'); renderCommunity(); }
-function renderCommunity(){ const box=document.getElementById('comList'); box.innerHTML='<p style="color:#5b7a90;font-size:13px">Loading\u2026</p>';
+function setComTab(tab){ comTab=tab; comPage=0; document.getElementById('comTabCourses').className='btn small'+(tab==='course'?'':' sec'); document.getElementById('comTabHoles').className='btn small'+(tab==='hole'?'':' sec'); renderCommunity(); }
+function renderCommunity(){ const box=document.getElementById('comList'); const pager=document.getElementById('comPager'); pager.innerHTML=''; box.innerHTML='<p style="color:#5b7a90;font-size:13px">Loading\u2026</p>';
   if(!sbReady()){ box.innerHTML='<p style="color:#5b7a90;font-size:13px">Community isn\'t set up yet.</p>'; return; }
-  sbGet('shared?kind=eq.'+comTab+'&order=created_at.desc&limit=60').then(rows=>{
-    if(!rows.length){ box.innerHTML='<p style="color:#5b7a90;font-size:13px">Nothing shared yet. Be the first \u2014 publish one from My Levels.</p>'; return; }
+  function buildPager(hasNext){ pager.innerHTML=''; const mk=(label,disabled,fn)=>{ const b=document.createElement('button'); b.className='btn sec small'; b.textContent=label; b.style.marginTop='0'; if(disabled){ b.disabled=true; b.style.opacity='.4'; } else b.addEventListener('click',fn); pager.appendChild(b); };
+    if(comPage>0||hasNext){ mk('\u2039 Prev', comPage===0, ()=>{ comPage--; renderCommunity(); }); const lbl=document.createElement('span'); lbl.textContent='Page '+(comPage+1); lbl.style.cssText='align-self:center;font-size:13px;color:#5b7a90;font-weight:800'; pager.appendChild(lbl); mk('Next \u203A', !hasNext, ()=>{ comPage++; renderCommunity(); }); } }
+  let q='shared?kind=eq.'+comTab; if(comQuery){ const e=encodeURIComponent(comQuery); q+='&or=(name.ilike.*'+e+'*,author.ilike.*'+e+'*)'; } q+='&order='+comSort+'&offset='+(comPage*COM_PAGE)+'&limit='+(COM_PAGE+1);
+  sbGet(q).then(rows=>{
+    let hasNext=rows.length>COM_PAGE; if(hasNext)rows=rows.slice(0,COM_PAGE);
+    if(!rows.length){ box.innerHTML='<p style="color:#5b7a90;font-size:13px">'+(comQuery?'No matches.':(comPage>0?'No more here.':'Nothing shared yet \u2014 be the first, publish one from My Levels.'))+'</p>'; if(comPage>0)buildPager(false); return; }
     box.innerHTML='';
     rows.forEach(it=>{ const div=document.createElement('div'); div.className='courseItem'; div.style.cursor='default';
-      const L=document.createElement('div'); L.innerHTML='<div class="cn">'+esc(it.name)+'</div><div class="cs">by '+esc(it.author||'anon')+' \u2022 '+esc(it.theme||'')+' \u2022 \u25B6 '+(it.plays||0)+'</div>'; div.appendChild(L);
+      const hc=it.kind==='course'?(((it.data&&it.data.holes&&it.data.holes.length)||0)+'h \u2022 '):'';
+      const L=document.createElement('div'); L.style.minWidth='0'; L.innerHTML='<div class="cn">'+esc(it.name)+'</div><div class="cs">by '+esc(it.author||'anon')+' \u2022 '+hc+esc(it.theme||'')+' \u2022 \u25B6 '+(it.plays||0)+' \u2022 '+ago(it.created_at)+'</div>'; div.appendChild(L);
       const R=document.createElement('div'); R.style.cssText='display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end';
       const pl=document.createElement('button'); pl.className='sbtn'; pl.style.cssText='width:auto;padding:6px 12px'; pl.textContent='Play'; pl.addEventListener('click',()=>comPlay(it)); R.appendChild(pl);
       const im=document.createElement('button'); im.className='sbtn'; im.style.cssText='width:auto;padding:6px 12px;background:#5b86a6'; im.textContent='Import'; im.addEventListener('click',()=>comImport(it)); R.appendChild(im);
-      const rp=document.createElement('button'); rp.className='sbtn'; rp.style.cssText='width:auto;padding:6px 10px;background:#c4ccd2'; rp.textContent='\u2691'; rp.addEventListener('click',()=>comReport(it,rp)); R.appendChild(rp);
+      const liked=(progress.liked||[]).includes(it.id); const lk=document.createElement('button'); lk.className='sbtn'; lk.style.cssText='width:auto;padding:6px 11px;background:'+(liked?'#2f9e52':'#c4ccd2'); lk.textContent='\uD83D\uDC4D '+(it.likes||0); lk.addEventListener('click',()=>comLike(it,lk)); R.appendChild(lk);
+      if(it.owner && it.owner===progress.pubToken){ const dl=document.createElement('button'); dl.className='sbtn'; dl.style.cssText='width:auto;padding:6px 10px;background:#c4ccd2'; dl.textContent='Delete'; armDelete(dl,()=>comDeleteOwn(it)); R.appendChild(dl); }
+      else if(progress.adminSecret){ const ad=document.createElement('button'); ad.className='sbtn'; ad.style.cssText='width:auto;padding:6px 10px;background:#e7513a'; ad.textContent='Del'; armDelete(ad,()=>comAdminDelete(it)); R.appendChild(ad); }
       div.appendChild(R); box.appendChild(div); });
+    buildPager(hasNext);
   }).catch(()=>{ box.innerHTML='<p style="color:#e7513a;font-size:13px">Couldn\'t load. Check your connection.</p>'; });
 }
-function comPlay(it){ if(it.kind==='course'){ const holes=(it.data&&it.data.holes)||[]; if(!holes.length)return; playCourse({name:it.name,theme:it.theme||'green',holes:holes},'community'); } else { playDef(it.data,'community',it.name); } if(it.id)sbRpc('bump_plays',{row_id:it.id}); }
+function armDelete(btn,fn){ let armed=false; const orig=btn.textContent, bg=btn.style.background; btn.addEventListener('click',()=>{ if(!armed){ armed=true; btn.textContent='Sure?'; btn.style.background='#e7513a'; setTimeout(()=>{armed=false;btn.textContent=orig;btn.style.background=bg;},2500); return; } fn(); }); }
+function comPlay(it){ if(it.kind==='course'){ const holes=(it.data&&it.data.holes)||[]; if(!holes.length)return; playCourse({name:it.name,theme:it.theme||'green',holes:holes},'community'); } else { playDef(it.data,'community',it.name); } if(it.id){ const cp=progress.countedPlays||(progress.countedPlays=[]); if(!cp.includes(it.id)){ cp.push(it.id); if(cp.length>400)cp.shift(); saveProgress(); sbRpc('bump_plays',{row_id:it.id}); } } }
 function comImport(it){ if(it.kind==='course'){ progress.customCourses.push({name:it.name,theme:it.theme||'green',holes:(it.data.holes||[])}); } else { progress.customHoles.push({name:it.name,def:it.data}); } saveProgress(); showModal('Added to My Levels.',[{label:'OK',cls:'sec',fn:hideModal}]); }
-function comReport(it,btn){ if(it.id)sbRpc('bump_reports',{row_id:it.id}); if(btn){ btn.textContent='\u2713'; btn.disabled=true; } }
+function comLike(it,btn){ if(!it.id)return; const arr=progress.liked||(progress.liked=[]); const i=arr.indexOf(it.id);
+  if(i>=0){ arr.splice(i,1); it.likes=Math.max(0,(it.likes||0)-1); sbRpc('bump_likes',{row_id:it.id,delta:-1}); btn.style.background='#c4ccd2'; }
+  else { arr.push(it.id); it.likes=(it.likes||0)+1; sbRpc('bump_likes',{row_id:it.id,delta:1}); btn.style.background='#2f9e52'; }
+  saveProgress(); btn.textContent='\uD83D\uDC4D '+it.likes; }
+function comDeleteOwn(it){ sbRpcCall('delete_shared',{row_id:it.id,tok:progress.pubToken}).then(ok=>{ if(ok){ renderCommunity(); } else showModal('Could not delete that post.',[{label:'OK',cls:'sec',fn:hideModal}]); }).catch(()=>showModal('Delete failed. Check your connection.',[{label:'OK',cls:'sec',fn:hideModal}])); }
+function comAdminDelete(it){ sbRpcCall('admin_delete',{row_id:it.id,secret:progress.adminSecret}).then(ok=>{ if(ok){ renderCommunity(); } else showModal('Admin delete failed \u2014 wrong secret?',[{label:'OK',cls:'sec',fn:hideModal}]); }).catch(()=>showModal('Delete failed. Check your connection.',[{label:'OK',cls:'sec',fn:hideModal}])); }
 document.querySelectorAll('.creBtn').forEach(b=>b.addEventListener('click',()=>{ const t=b.getAttribute('data-tool'); if(!t)return; creTool=t; document.querySelectorAll('.creBtn').forEach(x=>x.classList.toggle('on',x===b)); creDraw(); }));
 document.getElementById('creDir').addEventListener('click',()=>{ creRot=(creRot+1)%4; document.getElementById('creDir').textContent='Dir '+['↓','↑','→','←'][creRot]; creDraw(); });
 document.getElementById('creUndo').addEventListener('click',doUndo);
@@ -1313,6 +1356,12 @@ document.getElementById('comBack').addEventListener('click',openCustom);
 document.getElementById('comRefresh').addEventListener('click',renderCommunity);
 document.getElementById('comTabCourses').addEventListener('click',()=>setComTab('course'));
 document.getElementById('comTabHoles').addEventListener('click',()=>setComTab('hole'));
+document.getElementById('comSearch').addEventListener('input',e=>{ const v=e.target.value.trim(); clearTimeout(comSearchTimer); comSearchTimer=setTimeout(()=>{ comQuery=v; comPage=0; renderCommunity(); },320); });
+document.getElementById('comSort').addEventListener('change',e=>{ comSort=e.target.value; comPage=0; renderCommunity(); });
+let comTitleTaps=0, comTitleTimer=null;
+document.getElementById('comTitle').addEventListener('click',()=>{ comTitleTaps++; clearTimeout(comTitleTimer); comTitleTimer=setTimeout(()=>comTitleTaps=0,1600); if(comTitleTaps>=5){ comTitleTaps=0; showModal('Admin secret (leave blank to turn admin mode off):',[
+  {label:'Save',fn:()=>{ progress.adminSecret=(document.getElementById('creModalText').value||'').trim(); saveProgress(); hideModal(); renderCommunity(); }},
+  {label:'Cancel',cls:'sec',fn:hideModal} ],{text:true,textVal:progress.adminSecret||''}); } });
 document.getElementById('cbAdd').addEventListener('click',cbAddHole);
 document.getElementById('cbPlay').addEventListener('click',cbPlayTest);
 document.getElementById('cbSave').addEventListener('click',cbSaveCourse);
